@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Memory Flash</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
+</head>
+<body>
+<nav>
+    <a href="{{ url_for('home') }}">Hacker typer</a>
+    <a href="{{ url_for('typing_test') }}">Typing test</a>
+    <a class="on" href="{{ url_for('games') }}">Games</a>
+</nav>
+<main>
+<h1>Memory Flash</h1>
+<p class="sub">The line flashes on screen, then disappears. Type it from memory — need 80% accuracy to advance. Each round shows the line for less time.</p>
+<div class="bar">
+    <button class="go" id="start">Start</button>
+    <span class="bestline" id="bestl"></span>
+</div>
+<div class="wl" id="disp">Press Start</div>
+<input class="gin" id="gin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type it from memory" disabled>
+<p class="hint" id="status"></p>
+<div class="stats">
+    <div class="stat"><b id="s1">0</b><span>level</span></div>
+    <div class="stat"><b id="s3">0</b><span>best level</span></div>
+</div>
+<div class="result" id="res">
+    <h1 id="resH"></h1>
+    <p id="resP"></p>
+    <button class="go" id="again">Play again</button>
+</div>
+</main>
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script>
+const PHRASES=[
+"check the wifi",
+"submit before midnight",
+"the professor is late again",
+"group project chat is on fire",
+"the library closes at midnight during exam week",
+"nobody remembers the deadline until the night before",
+"coffee is basically a food group during finals",
+"the printer only jams when the assignment is due",
+"attendance is optional until it suddenly is not",
+"the wifi password changes every semester for no reason",
+"the lecturer posted slides an hour before the exam",
+"group projects run on one person and a lot of hope"
+];
+let level,target,phase,timer,gin,disp;
+gin=document.getElementById('gin');disp=document.getElementById('disp');
+function phraseFor(lv){return PHRASES[Math.min(lv-1,PHRASES.length-1)]}
+function revealMs(lv,text){return Math.max(700,text.length*75-lv*45)}
+function begin(){
+  level=1;s1.textContent=level;s3.textContent=getBest('memory');res.classList.remove('show');
+  startRound();
+}
+function startRound(){
+  target=phraseFor(level);
+  showPhrase();
+}
+function showPhrase(){
+  phase='reveal';
+  disp.textContent=target;disp.classList.remove('masked');
+  status.textContent='Memorize it…';
+  gin.disabled=true;gin.value='';
+  clearTimeout(timer);timer=setTimeout(hidePhrase,revealMs(level,target));
+}
+let spans;
+function hidePhrase(){
+  phase='type';
+  disp.innerHTML='';
+  spans=[...target].map(()=>{const s=document.createElement('span');s.className='c todo';s.textContent='•';disp.appendChild(s);return s});
+  status.textContent='Type it from memory. Fill it in, then it checks automatically.';
+  gin.disabled=false;gin.value='';gin.focus();
+}
+gin.addEventListener('input',()=>{
+  if(phase!=='type')return;
+  let v=gin.value;
+  if(v.length>target.length){v=v.slice(0,target.length);gin.value=v}
+  spans.forEach((s,idx)=>{
+    if(idx<v.length){s.textContent=v[idx]===' '?'\u00A0':v[idx];s.className='c '+(v[idx]===target[idx]?'ok':'bad')}
+    else{s.textContent='•';s.className='c todo'}
+  });
+  if(v.length>=target.length)finishRound(v);
+});
+function finishRound(v){
+  gin.disabled=true;
+  const correct=[...v].filter((c,idx)=>c===target[idx]).length;
+  const acc=Math.round(100*correct/target.length);
+  if(acc>=80){
+    status.textContent='Nice — '+acc+'% accurate. Next round…';
+    level++;s1.textContent=level;
+    setTimeout(startRound,900);
+  }else{
+    end(acc);
+  }
+}
+function end(acc){
+  const reached=level; // level attempted but not cleared
+  const b=best('memory',level-1);s3.textContent=b;
+  resH.textContent='Memory slipped';
+  resP.textContent='Got to level '+reached+' at '+acc+'% accuracy that round. Best level: '+b+'.';
+  res.classList.add('show');
+  status.textContent='';
+}
+start.onclick=again.onclick=begin;$('bestl').textContent='Best level: '+getBest('memory');
+</script>
+</body>
+</html>

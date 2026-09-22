@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Games</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
+</head>
+<body>
+<nav>
+    <a href="{{ url_for('home') }}">Hacker typer</a>
+    <a href="{{ url_for('typing_test') }}">Typing test</a>
+    <a class="on" href="{{ url_for('games') }}">Games</a>
+</nav>
+<main>
+    <h1>Games</h1>
+    <p class="sub">Pick one and start typing.</p>
+    <div class="gmenu">
+        <a class="gcard" href="{{ url_for('race') }}">
+            <h3>Race <span class="badge">Multiplayer</span></h3>
+            <p>Beat the Ragebaiter solo, or race classmates live in a room.</p>
+        </a>
+        <a class="gcard" href="{{ url_for('rain') }}">
+            <h3>Word Rain</h3>
+            <p>Type falling words before they hit the ground. 5 lives, and it speeds up.</p>
+        </a>
+        <a class="gcard" href="{{ url_for('sprint') }}">
+            <h3>60s Sprint <span class="badge">Multiplayer</span></h3>
+            <p>Type as many words as you can in one minute, solo or head-to-head.</p>
+        </a>
+        <a class="gcard" href="{{ url_for('survival') }}">
+            <h3>Sudden Death</h3>
+            <p>One wrong key and you get slimed. How far can you go?</p>
+        </a>
+        <a class="gcard" href="{{ url_for('scramble') }}">
+            <h3>Unscramble</h3>
+            <p>Fix the tech words. Build your streak.</p>
+        </a>
+        <a class="gcard" href="{{ url_for('hack') }}">
+            <h3>Terminal Hack</h3>
+            <p>Breach command lines before the trace meter catches you.</p>
+        </a>
+        <a class="gcard" href="{{ url_for('memory') }}">
+            <h3>Memory Flash</h3>
+            <p>Memorize the line, then type it blind. Gets harder every round.</p>
+        </a>
+    </div>
+</main>
+</body>
+</html>

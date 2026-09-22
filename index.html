@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Hacker Typer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav>
+    <a class="on" href="{{ url_for('home') }}">Hacker typer</a>
+    <a href="{{ url_for('typing_test') }}">Typing test</a>
+    <a href="{{ url_for('games') }}">Games</a>
+</nav>
+<main>
+<h1>Hacker typer</h1>
+<p class="sub">Choose a file, then type away. Have fun fam.</p>
+<p class="sub">Feel like a hacker, become a hacker.</p>
+<div class="bar">
+    <input type="file" id="file" aria-label="Choose a file">
+    <label>Speed
+        <select id="speed">
+            <option value="2">Slow</option>
+            <option value="4" selected>Normal</option>
+            <option value="8">Fast</option>
+            <option value="16">Plus Ultra</option>
+        </select>
+    </label>
+    <button id="reset">Restart</button>
+</div>
+<div class="screen" id="out" tabindex="0" aria-live="off">
+    <span id="text"></span>
+    <span class="cur"></span>
+</div>
+<p class="hint" id="status">Use the sample or Choose file</p>
+</main>
+<script>
+const sample=`#include <stdio.h>\n\nint main(void){\n    printf("Access granted.\\n");\n    return 0;\n}\n\n// Choose your own file above to type it out instead.\n`;
+let data=sample,pos=0;
+const out=document.getElementById('out'),text=document.getElementById('text'),status=document.getElementById('status');
+function render(){text.textContent=data.slice(0,pos);out.scrollTop=out.scrollHeight}
+function type(){const n=+document.getElementById('speed').value;pos=Math.min(data.length,pos+n);render();if(pos>=data.length)status.textContent='Done. Press Restart to type it again.'}
+document.getElementById('file').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{data=String(r.result).replace(/\r\n/g,'\n');pos=0;render();status.textContent='Loaded '+f.name+' ('+data.length+' characters). Start typing.';e.target.blur()};
+  r.onerror=()=>status.textContent='Couldnt read that gang. Try something else.';
+  r.readAsText(f);
+});
+document.getElementById('reset').onclick=()=>{pos=0;render();status.textContent='Restarted.'};
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const t=e.target.tagName;if(t==='SELECT'||t==='INPUT'||t==='BUTTON')return;
+  if(e.key.length===1||e.key==='Enter'||e.key==='Backspace'||e.key==='Tab'||e.key===' '){e.preventDefault();type()}
+});
+</script>
+</body>
+</html>

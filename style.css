@@ -1,0 +1,162 @@
+:root {
+  --bg: #10151a;
+  --panel: #171e25;
+  --text: #d8e3d4;
+  --muted: #66766e;
+  --accent: #7bd88f;
+  --bad: #ff6b5e;
+  --badbg: #4a1f1f;
+  --font: ui-monospace, "Cascadia Code", "Fira Code", Consolas, Menlo, monospace;
+}
+
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+}
+
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid #26313a;
+}
+
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+nav a:hover,
+nav a:focus-visible {
+  color: var(--text);
+  outline: 1px solid var(--muted);
+}
+
+nav a.on {
+  color: var(--bg);
+  background: var(--accent);
+}
+
+
+main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0 0 4px;
+}
+
+.sub {
+  color: var(--muted);
+  margin: 0 0 20px;
+}
+
+
+button,
+select,
+input[type="file"] {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid #33414c;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+button {
+  cursor: pointer;
+}
+
+button.go {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+
+.screen {
+  background: var(--panel);
+  border: 1px solid #26313a;
+  border-radius: 8px;
+  padding: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: auto;
+}
+
+#out {
+  height: 65vh;
+  color: var(--accent);
+}
+
+.cur {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  background: var(--accent);
+  vertical-align: text-bottom;
+  animation: blink 1s steps(2) infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cur { animation: none; }
+}
+
+
+.poem {
+  font-size: 1.05rem;
+  line-height: 1.9;
+}
+
+.poem .ok { color: var(--accent); }
+.poem .bad {
+  color: #fff;
+  background: var(--badbg);
+  border-bottom: 2px solid var(--bad);
+}
+.poem .now {
+  background: #2b3a46;
+  border-radius: 2px;
+}
+.poem .todo { color: var(--muted); }
+
+
+.stats {
+    display: flex;
+    flex-wrap: wrap
+}

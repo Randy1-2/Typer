@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unscramble</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
+</head>
+<body>
+<nav>
+    <a href="{{ url_for('home') }}">Hacker typer</a>
+    <a href="{{ url_for('typing_test') }}">Typing test</a>
+    <a class="on" href="{{ url_for('games') }}">Games</a>
+</nav>
+<main>
+    <h1>Unscramble</h1>
+    <p class="sub">Fix as many jumbled words as you can in 60 seconds. Press Enter to check.</p>
+    <div class="bar">
+        <button class="go" id="start">Start</button>
+        <span class="bestline" id="bestl"></span>
+    </div>
+    <div class="big" id="jum">?????</div>
+    <input class="gin" id="gin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="your answer" disabled>
+    <p style="margin-top:10px"><button class="go" id="skip">Skip (resets streak)</button></p>
+    <div class="stats">
+        <div class="stat"><b id="s1">0</b><span>solved</span></div>
+        <div class="stat"><b id="s2">0</b><span>streak</span></div>
+        <div class="stat"><b id="s3">0</b><span>time left</span></div>
+    </div>
+    <div class="result" id="res">
+        <h1 id="resH"></h1>
+        <p id="resP"></p>
+        <button class="go" id="again">Play again</button>
+    </div>
+    <div class="combo" id="combo"></div>
+</main>
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script>
+const TECH=['python','server','browser','compiler','network','variable','function','database','keyboard','processor','algorithm','internet','software','hardware','circuit','router','binary','memory','pointer','session','cookie','render','deploy','syntax','module','object','string','integer','array','loop','debug','kernel','socket','packet','cache','script','frontend','backend','framework','protocol','lecture','deadline','semester','campus','wifi','scholarship','plagiarism','seminar','hostel','cafeteria','professor','tutorial','assignment','printer','password'];
+let cur,solved,streak,end_,timer,over=true;
+function scr(w){let a;do{a=[...w].sort(()=>Math.random()-.5).join('')}while(a===w);return a}
+function nxt(){let w;do{w=pick(TECH)}while(w===cur);cur=w;jum.textContent=scr(w).toUpperCase();gin.value='';gin.classList.remove('err')}
+function begin(){solved=streak=0;over=false;end_=performance.now()+60000;res.classList.remove('show');s1.textContent=0;s2.textContent=0;s3.textContent='60s';
+ gin.disabled=false;cur='';nxt();gin.focus();clearInterval(timer);timer=setInterval(()=>{const l=Math.max(0,(end_-performance.now())/1000);s3.textContent=Math.ceil(l)+'s';if(l<=0)fin()},200)}
+function fin(){over=true;clearInterval(timer);gin.disabled=true;const b=best('scramble',solved);resH.textContent=solved+' words solved';resP.textContent='Best: '+b+'.';res.classList.add('show')}
+gin.addEventListener('keydown',e=>{if(e.key!=='Enter'||over)return;
+ if(gin.value.trim().toLowerCase()===cur){solved++;streak++;s1.textContent=solved;s2.textContent=streak;
+   if(streak>0&&streak%5===0){const c=$('combo');c.textContent='Streak x'+streak;flash(c,'show')}
+   nxt()}
+ else{streak=0;s2.textContent=0;gin.classList.add('err');flash(document.querySelector('main'),'shake')}});
+gin.addEventListener('input',()=>gin.classList.remove('err'));
+skip.onclick=()=>{if(over)return;streak=0;s2.textContent=0;nxt();gin.focus()};
+start.onclick=again.onclick=begin;$('bestl').textContent='Best: '+getBest('scramble');
+</script>
+</body>
+</html>

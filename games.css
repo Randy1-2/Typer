@@ -1,0 +1,155 @@
+.gmenu {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px;margin-top:18px
+}
+.gcard{
+    display:block;background:var(--panel,#1a232b);
+    border:1px solid #33414c;
+    border-radius:10px;
+    padding:18px;text-decoration:none;
+    color:inherit
+}
+.gcard:hover{
+    border-color:#6cf
+}
+.gcard h3{
+     margin:0 0 6px
+ }
+.gcard
+p{
+    margin:0;
+    opacity:.75;
+    font-size:.9em
+}
+.field{
+    position:relative;
+    height:380px;
+    background:var(--panel,#1a232b);
+    border:1px solid #33414c;
+    border-radius:10px;
+    overflow:hidden;
+    margin:14px 0
+}
+.field:after{
+    content:"";position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:2px;
+    background:#f87171
+}
+.fw{position:absolute;
+    padding:2px 8px;
+    border-radius:6px;
+    background:#0b1116;
+    border:1px solid #33414c;
+    font-family:monospace;
+    white-space:nowrap
+}
+.fw .d{color:#4ade80
+}
+.fw.act{
+    border-color:#6cf
+}
+.wl{
+    position:relative;
+    background:var(--panel,#1a232b);
+    border:1px solid #33414c;
+    border-radius:10px;
+    padding:14px 16px;
+    font-family:monospace;
+    font-size:1.25em;
+    line-height:1.9;
+    height:5.8em;
+    overflow:hidden;
+    margin:14px 0;
+    outline:none
+}
+.wl .w.ok{
+    color:#4ade80
+}
+.wl .w.no{
+    color:#f87171;text-decoration:underline
+}.wl .w.cur{
+     background:#33414c;border-radius:4px
+ }
+.wl .w.bad{
+    background:#7f1d1d;
+    border-radius:4px
+}
+.wl .c.ok{
+    color:#4ade80
+}
+.wl .c.now{
+     background:#33414c
+ }
+.gin{
+    font:inherit;
+    font-size:1.2em;
+    width:100%;
+    box-sizing:border-box;
+    padding:10px;
+    background:var(--panel,#1a232b);
+    color:inherit;
+    border:1px solid #33414c;
+    border-radius:8px
+}
+.gin.err{
+    border-color:#f87171
+}
+.big{
+    font-size:2.4em;
+    letter-spacing:.15em;
+    font-family:monospace;
+    text-align:center;
+    margin:22px 0
+}
+.bestline{
+    opacity:.7;
+    font-size:.9em
+}
+
+/* multiplayer */
+.modebar{display:flex;gap:8px;margin-bottom:14px}
+.modebar button{flex:none}
+.modebar button.on{background:var(--accent,#7bd88f);color:var(--bg,#10151a);border-color:var(--accent,#7bd88f);font-weight:700}
+.mp{background:var(--panel,#1a232b);border:1px solid #33414c;border-radius:10px;padding:16px;margin-bottom:16px}
+.mp .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mp .code{font-size:1.6em;letter-spacing:.2em;font-weight:700;color:#6cf}
+.mp .players{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.mp .prow{display:flex;align-items:center;gap:10px;font-size:.95em}
+.mp .prow .bar{flex:1;height:8px;background:#0b1116;border-radius:5px;overflow:hidden;margin:0}
+.mp .prow .fill{height:100%;background:#6cf;width:0%;transition:width .25s}
+.mp .prow.me .fill{background:var(--accent,#7bd88f)}
+.mp .prow .nm{width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp .prow .wv{width:70px;text-align:right;opacity:.8}
+.badge{display:inline-block;font-size:.7em;padding:2px 7px;border-radius:999px;background:#264d3d;color:#7bd88f;margin-left:8px;vertical-align:middle}
+.countdown{font-size:3em;text-align:center;margin:18px 0;font-weight:700;color:#6cf}
+.combo{position:fixed;top:14px;right:14px;background:#264d3d;color:#7bd88f;padding:8px 14px;border-radius:8px;font-weight:700;opacity:0;pointer-events:none}
+.combo.show{animation:pop .6s ease}
+@keyframes pop{0%{opacity:0;transform:translateY(-6px) scale(.9)}15%{opacity:1;transform:translateY(0) scale(1.05)}75%{opacity:1}100%{opacity:0}}
+.shake{animation:shake .35s}
+@keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+
+/* race track + shared result overlay (was previously unstyled) */
+.track{position:relative;height:110px;background:var(--panel,#1a232b);border:1px solid #33414c;border-radius:10px;margin:14px 0;overflow:hidden}
+.lane{position:absolute;left:10px;right:44px;height:1px;background:#26313a}
+.lbl{position:absolute;left:10px;font-size:.75em;opacity:.6}
+.finish{position:absolute;right:30px;top:0;bottom:0;width:2px;background:#f87171}
+.racer{position:absolute;font-size:1.4em;transition:left .12s linear}
+
+.result{display:none;background:var(--panel,#1a232b);border:1px solid #33414c;border-radius:10px;padding:20px;margin-top:16px;text-align:center}
+.result.show{display:block}
+.result h1{margin:0 0 8px;font-size:1.2rem}
+
+/* terminal hack trace meter */
+.tracewrap{background:var(--panel,#1a232b);border:1px solid #33414c;border-radius:10px;padding:10px 14px;margin:14px 0}
+.tracewrap .lbl2{display:flex;justify-content:space-between;font-size:.8em;opacity:.75;margin-bottom:6px}
+.tracebar{height:10px;background:#0b1116;border-radius:6px;overflow:hidden}
+.tracefill{height:100%;width:0%;background:#4ade80;transition:width .2s}
+.tracefill.warn{background:#facc15}
+.tracefill.danger{background:#f87171}
+
+/* memory flash */
+.masked{color:var(--muted,#66766e)}

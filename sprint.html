@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>60s Sprint</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
+</head>
+<body>
+<nav>
+    <a href="{{ url_for('home') }}">Hacker typer</a>
+    <a href="{{ url_for('typing_test') }}">Typing test</a>
+    <a href="{{ url_for('games') }}">Games</a>
+</nav>
+<main>
+<h1>60s Sprint <span class="badge">Multiplayer</span></h1>
+<p class="sub">Type each word and press space. You get one minute — solo, or head-to-head in a room.</p>
+
+<div class="modebar">
+    <button id="modeSolo" class="on">Solo</button>
+    <button id="modeMp">Race friends</button>
+</div>
+
+<label>Name <input id="playerName" maxlength="20" placeholder="your name" style="font:inherit;color:inherit;background:var(--panel);border:1px solid #33414c;border-radius:6px;padding:8px;margin-bottom:14px"></label>
+
+<!-- SOLO -->
+<section id="soloView">
+<div class="bar">
+    <button class="go" id="start">Start</button>
+    <span class="bestline" id="bestl"></span>
+</div>
+<div class="wl" id="wl"></div>
+<input class="gin" id="gin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="start typing here">
+<div class="stats">
+    <div class="stat"><b id="s1">0</b><span>words / min</span></div>
+    <div class="stat"><b id="s2">0</b><span>accuracy</span></div>
+    <div class="stat"><b id="s3">0</b><span>time left</span></div>
+</div>
+<div class="result" id="res">
+    <h1 id="resH"></h1>
+    <p id="resP"></p>
+    <button class="go" id="again">Play again</button>
+</div>
+</section>
+
+<!-- MULTIPLAYER -->
+<section id="mpView" style="display:none">
+  <div class="mp" id="mpLobby">
+    <div class="row">
+        <button class="go" id="mpCreate">Create room</button>
+        <span>or</span>
+        <input id="mpCode" placeholder="ROOM CODE" maxlength="6" style="text-transform:uppercase;width:120px;font:inherit;background:var(--panel);color:inherit;border:1px solid #33414c;border-radius:6px;padding:8px">
+        <button class="go" id="mpJoin">Join room</button>
+    </div>
+    <p class="hint" id="mpMsg"></p>
+  </div>
+
+  <div class="mp" id="mpRoom" style="display:none">
+    <div class="row"><span>Room code</span><span class="code" id="mpCodeShow"></span><button class="go" id="mpStart">Start sprint</button></div>
+    <p class="hint">Everyone gets the exact same 120 words, same 60 seconds.</p>
+    <div class="players" id="mpPlayers"></div>
+  </div>
+
+  <div class="countdown" id="mpCountdown" style="display:none"></div>
+
+  <div id="mpRace" style="display:none">
+    <div class="wl" id="mpWl"></div>
+    <input class="gin" id="mpGin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="start typing here">
+    <div class="stats">
+        <div class="stat"><b id="mpS1">0</b><span>words / min</span></div>
+        <div class="stat"><b id="mpS2">0</b><span>accuracy</span></div>
+        <div class="stat"><b id="mpS3">60s</b><span>time left</span></div>
+    </div>
+    <div class="mp" style="margin-top:14px"><div class="players" id="mpLivePlayers"></div></div>
+  </div>
+
+  <div class="result" id="mpRes">
+    <h1>Final standings</h1>
+    <div class="players" id="mpFinal"></div>
+    <button class="go" id="mpAgain">New room</button>
+  </div>
+</section>
+</main>
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script>
+// ---------- mode switching ----------
+const soloView=document.getElementById('soloView'),mpView=document.getElementById('mpView');
+document.getElementById('modeSolo').onclick=()=>{soloView.style.display='';mpView.style.display='none';modeSolo.classList.add('on');modeMp.classList.remove('on')};
+document.getElementById('modeMp').onclick=()=>{soloView.style.display='none';mpView.style.display='';modeMp.classList.add('on');modeSolo.classList.remove('on')};
+
+// ================= SOLO =================
+let list,idx,t0,timer,right,total,chars,over=true;
+function begin(){list=Array.from({length:300},()=>pick(WORDS));idx=0;right=total=chars=0;t0=null;over=false;clearInterval(timer);
+ wl.innerHTML=list.map((w,i)=>'<span class="w" id="w'+i+'">'+w+'</span> ').join('');wl.scrollTop=0;mark();
+ gin.value='';gin.disabled=false;gin.focus();res.classList.remove('show');s1.textContent=0;s2.textContent='100%';s3.textContent='60s'}
+function mark(){const c=$('w'+idx);c.className='w cur';wl.scrollTop=c.offsetTop-10}
+function stats(){const t=(performance.now()-t0)/60000;s1.textContent=t>0.02?Math.round(chars/5/t):0;s2.textContent=total?Math.round(100*right/total)+'%':'100%'}
+function tick(){const left=Math.max(0,60-(performance.now()-t0)/1000);s3.textContent=Math.ceil(left)+'s';stats();if(left<=0)end()}
+function end(){over=true;clearInterval(timer);gin.disabled=true;const wpm=Math.round(chars/5);const b=best('sprint',wpm);
+ resH.textContent=wpm+' words per minute';resP.textContent=right+' of '+total+' words correct. Best: '+b+' WPM.';res.classList.add('show')}
+gin.addEventListener('input',()=>{if(over)return;if(!t0){t0=performance.now();timer=setInterval(tick,200)}
+ const v=gin.value,cur=$('w'+idx);
+ if(v.endsWith(' ')){const w=v.trim();total++;const ok=w===list[idx];if(ok){right++;chars+=list[idx].length+1}
+  cur.className='w '+(ok?'ok':'no');idx++;gin.value='';mark();stats();return}
+ cur.className='w '+(list[idx].startsWith(v)?'cur':'bad')});
+start.onclick=again.onclick=begin;$('bestl').textContent='Best: '+getBest('sprint')+' WPM';
+
+// ================= MULTIPLAYER =================
+let mpGame='sprint', mpCode=null, mpPid=null, mpPoll=null, mpList=null, mpIdx=0, mpT0=null, mpRight=0, mpTotal=0, mpChars=0, mpOver=true, mpTimer=null;
+
+function mpName(){const n=playerName.value.trim();if(n)localStorage.setItem('typerName',n);return n||'Player'}
+
+function renderPlayers(el, room){
+  el.innerHTML='';
+  const list=Object.entries(room.players).sort((a,b)=>b[1].wpm-a[1].wpm);
+  for(const [pid,p] of list){
+    const row=document.createElement('div');
+    row.className='prow'+(pid===mpPid?' me':'');
+    row.innerHTML=`<span class="nm">${p.name.replace(/</g,'&lt;')}${pid===mpPid?' (you)':''}</span><span class="bar"><span class="fill" style="width:${p.progress}%"></span></span><span class="wv">${p.done?'done · ':''}${p.wpm} wpm</span>`;
+    el.appendChild(row);
+  }
+}
+async function refreshLobby(){
+  const room=await ROOM.state(mpGame,mpCode);
+  if(!room)return;
+  if(room.started_at && mpOver && !document.getElementById('mpRes').classList.contains('show')){
+    beginMpRace(room);return;
+  }
+  renderPlayers(document.getElementById('mpPlayers'), room);
+}
+document.getElementById('mpCreate').onclick=async()=>{
+  const r=await ROOM.create(mpGame, mpName());
+  if(!r){mpMsg.textContent='Could not create a room. Try again.';return}
+  mpCode=r.code;mpPid=r.player_id;showLobby();
+};
+document.getElementById('mpJoin').onclick=async()=>{
+  const code=document.getElementById('mpCode').value.trim().toUpperCase();
+  if(!code){mpMsg.textContent='Enter a room code first.';return}
+  const r=await ROOM.join(mpGame, code, mpName());
+  if(r.error){mpMsg.textContent=r.error;return}
+  mpCode=code;mpPid=r.player_id;showLobby();
+};
+function showLobby(){
+  document.getElementById('mpLobby').style.display='none';
+  document.getElementById('mpRoom').style.display='';
+  document.getElementById('mpCodeShow').textContent=mpCode;
+  clearInterval(mpPoll);mpPoll=setInterval(refreshLobby,600);
+  refreshLobby();
+}
+document.getElementById('mpStart').onclick=()=>ROOM.start(mpGame,mpCode);
+
+function beginMpRace(room){
+  document.getElementById('mpRoom').style.display='none';
+  const cd=document.getElementById('mpCountdown');cd.style.display='';
+  mpList=room.words;
+  const tick=()=>{
+    const left=room.started_at-Date.now()/1000;
+    if(left<=0){cd.style.display='none';startMpSprint();return}
+    cd.textContent=Math.ceil(left);
+    requestAnimationFrame(tick);
+  };
+  tick();
+}
+function startMpSprint(){
+  document.getElementById('mpRace').style.display='';
+  mpIdx=0;mpRight=mpTotal=mpChars=0;mpOver=false;mpT0=null;
+  const wl=document.getElementById('mpWl');
+  wl.innerHTML=mpList.map((w,i)=>'<span class="w" id="mw'+i+'">'+w+'</span> ').join('');
+  wl.scrollTop=0;markMp();
+  const gin=document.getElementById('mpGin');
+  gin.value='';gin.disabled=false;gin.focus();
+  document.getElementById('mpS1').textContent=0;document.getElementById('mpS2').textContent='100%';document.getElementById('mpS3').textContent='60s';
+  clearInterval(mpPoll);mpPoll=setInterval(pollMpSprint,700);
+}
+function markMp(){const c=document.getElementById('mw'+mpIdx);c.className='w cur';document.getElementById('mpWl').scrollTop=c.offsetTop-10}
+async function mpStatsPush(){
+  const t=(performance.now()-mpT0)/60000;
+  const wpm=t>0.02?Math.round(mpChars/5/t):0;
+  const acc=mpTotal?Math.round(100*mpRight/mpTotal):100;
+  document.getElementById('mpS1').textContent=wpm;document.getElementById('mpS2').textContent=acc+'%';
+  const pct=Math.round(100*mpIdx/mpList.length);
+  const room=await ROOM.update(mpGame,mpCode,mpPid,{progress:pct,wpm,done:false});
+  if(room)renderPlayers(document.getElementById('mpLivePlayers'), room);
+}
+function mpTick(){
+  const left=Math.max(0,60-(performance.now()-mpT0)/1000);
+  document.getElementById('mpS3').textContent=Math.ceil(left)+'s';
+  mpStatsPush();
+  if(left<=0)endMp();
+}
+document.getElementById('mpGin').addEventListener('input',()=>{
+  if(mpOver)return;
+  if(!mpT0){mpT0=performance.now();mpTimer=setInterval(mpTick,300)}
+  const gin=document.getElementById('mpGin');
+  const v=gin.value,cur=document.getElementById('mw'+mpIdx);
+  if(v.endsWith(' ')){
+    const w=v.trim();mpTotal++;const ok=w===mpList[mpIdx];if(ok){mpRight++;mpChars+=mpList[mpIdx].length+1}
+    cur.className='w '+(ok?'ok':'no');mpIdx++;gin.value='';
+    if(mpIdx>=mpList.length){endMp();return}
+    markMp();return;
+  }
+  cur.className='w '+(mpList[mpIdx].startsWith(v)?'cur':'bad');
+});
+async function endMp(){
+  if(mpOver)return;
+  mpOver=true;clearInterval(mpTimer);
+  document.getElementById('mpGin').disabled=true;
+  const wpm=Math.round(mpChars/5);
+  const room=await ROOM.update(mpGame,mpCode,mpPid,{progress:100,wpm,done:true});
+  if(room)renderPlayers(document.getElementById('mpLivePlayers'), room);
+}
+async function pollMpSprint(){
+  const room=await ROOM.state(mpGame,mpCode);
+  if(!room)return;
+  renderPlayers(document.getElementById('mpLivePlayers'), room);
+  if(mpOver && Object.values(room.players).every(p=>p.done)){
+    clearInterval(mpPoll);
+    document.getElementById('mpRace').style.display='none';
+    document.getElementById('mpRes').classList.add('show');
+    renderPlayers(document.getElementById('mpFinal'), room);
+  }
+}
+document.getElementById('mpAgain').onclick=()=>{
+  document.getElementById('mpRes').classList.remove('show');
+  document.getElementById('mpLobby').style.display='';
+  document.getElementById('mpRoom').style.display='none';
+  document.getElementById('mpRace').style.display='none';
+  mpCode=mpPid=null;mpMsg.textContent='';
+};
+</script>
+</body>
+</html>

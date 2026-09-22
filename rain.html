@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Word Rain</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
+</head>
+<body>
+<nav>
+    <a href="{{ url_for('home') }}">Hacker typer</a>
+    <a href="{{ url_for('typing_test') }}">Typing test</a>
+    <a class="on" href="{{ url_for('games') }}">Games</a>
+</nav>
+<main>
+    <h1>Word Rain</h1>
+    <p class="sub">Type the falling words before they hit the red line. Start typing a word to lock onto it.</p>
+    <div class="bar">
+        <button class="go" id="start">Start</button>
+        <span class="bestline" id="bestl"></span>
+    </div>
+    <div class="field" id="field"></div>
+    <div class="stats">
+        <div class="stat"><b id="s1">0</b><span>score</span></div>
+        <div class="stat"><b id="s2">0</b><span>lives</span></div>
+        <div class="stat"><b id="s3">0</b><span>best</span></div>
+    </div>
+    <div class="result" id="res">
+        <h1 id="resH"></h1>
+        <p id="resP"></p>
+        <button class="go" id="again">Play again</button>
+    </div>
+    <div class="combo" id="combo"></div>
+</main>
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script>
+const STREAK_MSGS=['Nice streak','Clean run','On fire','Certified typer','No mercy'];
+let words=[],lives,score,act,running,last,spawnT,raf,streak;
+$('bestl').textContent='';
+function upd(){$('s1').textContent=score;$('s2').textContent=lives;$('s3').textContent=getBest('rain')}
+function draw(o){o.el.innerHTML='<span class="d">'+o.w.slice(0,o.n)+'</span>'+o.w.slice(o.n);o.el.classList.toggle('act',o===act)}
+function spawn(){const w=pick(WORDS),el=document.createElement('span');el.className='fw';el.textContent=w;field.appendChild(el);
+ const x=5+Math.random()*Math.max(1,field.clientWidth-el.offsetWidth-10);el.style.left=x+'px';words.push({w,el,y:-30,n:0})}
+function kill(o){o.el.remove();words=words.filter(x=>x!==o);if(act===o)act=null}
+function loop(now){if(!running)return;const dt=Math.min(.1,(now-last)/1000);last=now;spawnT-=dt;
+ if(spawnT<=0){spawn();spawnT=Math.max(.5,2.2-score/400)}
+ const sp=35+score/8,floor=field.clientHeight-28;
+ for(const o of [...words]){o.y+=sp*dt;o.el.style.top=o.y+'px';if(o.y>floor){kill(o);lives--;streak=0;upd();flash(field,'shake');if(lives<=0)return end()}}
+ raf=requestAnimationFrame(loop)}
+function begin(){[...field.querySelectorAll('.fw')].forEach(e=>e.remove());words=[];lives=5;score=0;act=null;running=true;spawnT=0;streak=0;
+ res.classList.remove('show');upd();last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
+function end(){running=false;cancelAnimationFrame(raf);const b=best('rain',score);upd();
+ resH.textContent='Game over';resP.textContent='You scored '+score+'. Best: '+b+'.';res.classList.add('show')}
+document.addEventListener('keydown',e=>{if(!running||e.ctrlKey||e.metaKey||e.altKey||e.key.length!==1)return;e.preventDefault();
+ if(!act){const c=words.filter(o=>o.w[0]===e.key).sort((a,b)=>b.y-a.y)[0];if(!c)return;act=c}
+ if(e.key===act.w[act.n]){act.n++;if(act.n>=act.w.length){score+=act.w.length*10;const o=act;kill(o);streak++;upd();
+   if(streak>0&&streak%5===0){const c=$('combo');c.textContent=pick(STREAK_MSGS)+' — '+streak+' words';flash(c,'show')}
+ }else draw(act)}});
+start.onclick=again.onclick=begin;upd();
+</script>
+</body>
+</html>

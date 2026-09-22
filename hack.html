@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Terminal Hack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
+</head>
+<body>
+<nav>
+    <a href="{{ url_for('home') }}">Hacker typer</a>
+    <a href="{{ url_for('typing_test') }}">Typing test</a>
+    <a class="on" href="{{ url_for('games') }}">Games</a>
+</nav>
+<main>
+<h1>Terminal Hack</h1>
+<p class="sub">Type each command exactly to breach it. Mistakes fill the trace meter — hit 100% and you're caught. 45 seconds on the clock.</p>
+<div class="bar">
+    <button class="go" id="start">Start</button>
+    <span class="bestline" id="bestl"></span>
+</div>
+<div class="tracewrap">
+    <div class="lbl2"><span>trace</span><span id="traceLbl">0%</span></div>
+    <div class="tracebar"><div class="tracefill" id="traceFill"></div></div>
+</div>
+<div class="wl" id="txt" tabindex="0"></div>
+<div class="stats">
+    <div class="stat"><b id="s1">0</b><span>breached</span></div>
+    <div class="stat"><b id="s2">45s</b><span>time left</span></div>
+    <div class="stat"><b id="s3">0</b><span>best</span></div>
+</div>
+<div class="result" id="res">
+    <h1 id="resH"></h1>
+    <p id="resP"></p>
+    <button class="go" id="again">Play again</button>
+</div>
+<div class="combo" id="combo"></div>
+</main>
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script>
+const LINES=["ssh randy@campus-server","sudo apt update && sudo apt upgrade","git commit -m 'fix midnight bug'","SELECT * FROM students WHERE gpa > 3.5;","npm install express --save","print('access granted')","chmod +x deploy.sh","curl -X POST api/submit","python manage.py migrate","scp notes.txt randy@server:/home","docker build -t typer .","grep -r TODO src/","kill -9 $(pgrep chrome)","ping knust.edu.gh","tar -xzvf assignment.zip","vim final_project.py","export PATH=$PATH:/usr/local/bin","npm run build","systemctl restart nginx","echo 'wifi is not the problem' >> excuses.log"];
+let queue=[];
+function nextLine(){if(!queue.length)queue=[...LINES].sort(()=>Math.random()-.5);return queue.pop()}
+
+let target,i,spans,running=false,trace,lines,timeLeft,tickTimer;
+function renderLine(){
+  txt.innerHTML='';
+  spans=[...target].map(c=>{const s=document.createElement('span');s.className='c';s.textContent=c;txt.appendChild(s);return s});
+  spans[0].classList.add('now');
+  i=0;
+}
+function updTrace(){
+  traceFill.style.width=trace+'%';
+  traceLbl.textContent=Math.round(trace)+'%';
+  traceFill.classList.toggle('warn',trace>=45&&trace<75);
+  traceFill.classList.toggle('danger',trace>=75);
+}
+function begin(){
+  lines=0;trace=0;timeLeft=45;running=true;queue=[];
+  target=nextLine();renderLine();updTrace();
+  res.classList.remove('show');s1.textContent=0;s2.textContent='45s';s3.textContent=getBest('hack');
+  txt.focus();clearInterval(tickTimer);tickTimer=setInterval(tick,200);
+}
+function tick(){
+  if(!running)return;
+  timeLeft-=0.2;s2.textContent=Math.max(0,Math.ceil(timeLeft))+'s';
+  trace=Math.min(100,trace+0.35);updTrace();
+  if(timeLeft<=0)end(false);
+}
+function end(traced){
+  running=false;clearInterval(tickTimer);
+  const b=best('hack',lines);s3.textContent=b;
+  resH.textContent=traced?'TRACED — connection terminated':"Time's up, you're clear";
+  resP.textContent='Breached '+lines+' line'+(lines===1?'':'s')+'. Best: '+b+'.';
+  res.classList.add('show');
+}
+document.addEventListener('keydown',e=>{
+  if(!running||e.ctrlKey||e.metaKey||e.altKey||e.key.length!==1)return;
+  e.preventDefault();
+  if(e.key===target[i]){
+    spans[i].className='c ok';i++;
+    if(i>=target.length){
+      lines++;s1.textContent=lines;
+      trace=Math.max(0,trace-10);updTrace();
+      if(lines>0&&lines%5===0){const c=$('combo');c.textContent=lines+' lines breached';flash(c,'show')}
+      target=nextLine();renderLine();
+    }else{
+      spans[i].classList.add('now');
+    }
+  }else{
+    trace=Math.min(100,trace+14);updTrace();
+    spans[i].style.background='#7f1d1d';flash(txt,'shake');
+    setTimeout(()=>{if(spans[i])spans[i].style.background=''},150);
+    if(trace>=100)end(true);
+  }
+});
+start.onclick=again.onclick=begin;$('bestl').textContent='Best: '+getBest('hack')+' lines';
+</script>
+</body>
+</html>

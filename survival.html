@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Sudden Death</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/games.css') }}">
+</head>
+<body>
+<nav>
+    <a href="{{ url_for('home') }}">Hacker typer</a>
+    <a href="{{ url_for('typing_test') }}">Typing test</a>
+    <a href="{{ url_for('race') }}">Race</a>
+    <a class="on" href="{{ url_for('games') }}">Games</a>
+</nav>
+<main>
+    <h1>Sudden Death</h1>
+    <p class="sub">Type the text. One wrong key ends the run.</p>
+    <div class="bar">
+        <button class="go" id="start">Start</button>
+        <span class="bestline" id="bestl"></span>
+    </div>
+    <div class="wl" id="txt" tabindex="0"></div>
+    <div class="stats">
+        <div class="stat"><b id="s1">0</b><span>characters</span></div>
+        <div class="stat"><b id="s2">0</b><span>words / min</span></div>
+        <div class="stat"><b id="s3">0</b><span>best</span></div>
+    </div>
+    <div class="result" id="res">
+        <h1 id="resH"></h1>
+        <p id="resP"></p>
+        <button class="go" id="again">Play again</button>
+    </div>
+    <div class="combo" id="combo"></div>
+</main>
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script>
+const MILESTONES=[[25,'Warming up'],[50,'On a roll'],[100,'Dean\'s list energy'],[150,'Unstoppable'],[200,'All-nighter mode'],[300,'This is the way']];
+let target,i,spans,t0,running=false,raf,lastMilestone;
+function begin(){target=Array.from({length:120},()=>pick(WORDS)).join(' ');i=0;running=true;t0=null;lastMilestone=0;
+ txt.innerHTML='';spans=[...target].map(c=>{const s=document.createElement('span');s.className='c';s.textContent=c;txt.appendChild(s);return s});
+ spans[0].classList.add('now');txt.scrollTop=0;res.classList.remove('show');s1.textContent=0;s2.textContent=0;s3.textContent=getBest('survival');txt.focus()}
+function live(){if(!running)return;if(t0){const t=(performance.now()-t0)/60000;s2.textContent=t>0.01?Math.round(i/5/t):0}raf=requestAnimationFrame(live)}
+function end(dead){running=false;cancelAnimationFrame(raf);const b=best('survival',i);s3.textContent=b;
+ resH.textContent=dead?'Wrong key. Run over.':'Perfect run!';resP.textContent='You typed '+i+' characters without a mistake. Best: '+b+'.';res.classList.add('show')}
+function checkMilestone(){for(const [n,msg] of MILESTONES){if(i===n){const c=$('combo');c.textContent=msg+' — '+n+' chars';flash(c,'show');lastMilestone=n}}}
+document.addEventListener('keydown',e=>{if(!running||e.ctrlKey||e.metaKey||e.altKey||e.key.length!==1)return;e.preventDefault();
+ if(!t0){t0=performance.now();live()}
+ if(e.key!==target[i]){spans[i].style.background='#7f1d1d';flash(txt,'shake');return end(true)}
+ spans[i].className='c ok';i++;s1.textContent=i;checkMilestone();
+ if(i>=target.length)return end(false);
+ spans[i].classList.add('now');txt.scrollTop=spans[i].offsetTop-40});
+start.onclick=again.onclick=begin;$('bestl').textContent='';begin();running=false;
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Typing test</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+<body>
+<nav>
+    <a href="{{ url_for('home') }}">Hacker typer</a>
+    <a class="on" href="{{ url_for('typing_test') }}">Typing test</a>
+    <a href="{{ url_for('games') }}">Games</a>
+</nav>
+<main>
+<h1>Typing test</h1>
+<p class="sub">Type the passage. Letters highlight red when you make a mistake. Good luck gang</p>
+<div class="bar">
+    <label>Name <input id="playerName" maxlength="20" placeholder="your name" style="font:inherit;color:inherit;background:var(--panel);border:1px solid #33414c;border-radius:6px;padding:8px">
+    </label>
+    <label>Poem <select id="pick"></select></label>
+    <button id="restart">Restart</button>
+</div>
+<div class="stats">
+    <div class="stat">
+        <span>|Words/min--</span>
+        <b id="sWpm">0</b>
+
+    </div>
+    <div class="stat">
+        <span>|Accuracy--</span>
+        <b id="sAcc">100%</b>
+    </div>
+    <div class="stat">
+        <span>|Mistakes --</span>
+        <b id="sErr">0</b>
+    </div>
+    <div class="stat">
+        <span>|Time --</span>
+        <b id="sTime">0s</b>
+    </div>
+</div>
+<div class="screen poem" id="poem" tabindex="0" aria-label="Poem to type"></div>
+<textarea id="box" style="position:absolute;opacity:0;left:-9999px" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type here"></textarea>
+<p class="hint">Click the poem if typing stops working.</p>
+<div class="result" id="res">
+    <h1>Finished</h1>
+    <p id="resTxt"></p>
+    <p id="board" class="hint"></p>
+    <button class="go" id="again">Try again</button>
+</div>
+</main>
+<script>
+const POEMS={
+"Ozymandias (Shelley)":`I met a traveller from an antique land,
+Who said—“Two vast and trunkless legs of stone
+Stand in the desert. . . . Near them, on the sand,
+Half sunk a shattered visage lies, whose frown,
+And wrinkled lip, and sneer of cold command,
+Tell that its sculptor well those passions read
+Which yet survive, stamped on these lifeless things,
+The hand that mocked them, and the heart that fed;
+And on the pedestal, these words appear:
+My name is Ozymandias, King of Kings;
+Look on my Works, ye Mighty, and despair!
+Nothing beside remains. Round the decay
+Of that colossal Wreck, boundless and bare
+The lone and level sands stretch far away.”`,
+"Invictus (Henley)":`Out of the night that covers me,
+Black as the pit from pole to pole,
+I thank whatever gods may be
+For my unconquerable soul.
+
+In the fell clutch of circumstance
+I have not winced nor cried aloud.
+Under the bludgeonings of chance
+My head is bloody, but unbowed.
+
+Beyond this place of wrath and tears
+Looms but the Horror of the shade,
+And yet the menace of the years
+Finds and shall find me unafraid.
+
+It matters not how strait the gate,
+How charged with punishments the scroll,
+I am the master of my fate:
+I am the captain of my soul.`};
+const pick=document.getElementById('pick'),poem=document.getElementById('poem'),box=document.getElementById('box');
+Object.keys(POEMS).forEach(k=>pick.add(new Option(k,k)));
+let target,spans,start,keys,wrong,done,timer;
+function norm(s){return s.replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/—/g,'-')}
+function init(){
+  target=norm(POEMS[pick.value]);keys=0;wrong=0;done=false;start=null;clearInterval(timer);
+  box.value='';box.disabled=false;
+  poem.innerHTML='';spans=[...target].map(c=>{const s=document.createElement('span');s.textContent=c;s.className='todo';poem.appendChild(s);return s});
+  document.getElementById('res').classList.remove('show');paint();stats();box.focus();
+}
+function paint(){
+  const v=box.value;
+  spans.forEach((s,i)=>{
+    if(i<v.length)s.className=v[i]===target[i]?'ok':'bad';
+    else s.className=i===v.length?'now todo':'todo';
+  });
+}
+function elapsed(){return start?(Date.now()-start)/1000:0}
+function stats(){
+  const t=elapsed(),v=box.value,good=[...v].filter((c,i)=>c===target[i]).length;
+  const wpm=t>0?Math.round((good/5)/(t/60)):0;
+  const acc=keys?Math.max(0,Math.round(100*(keys-wrong)/keys)):100;
+  sWpm.textContent=wpm;sAcc.textContent=acc+'%';sErr.textContent=wrong;sTime.textContent=Math.round(t)+'s';
+  return{wpm,acc,t};
+}
+box.addEventListener('input',e=>{
+  if(done)return;
+  if(!start){start=Date.now();timer=setInterval(stats,250)}
+  let v=box.value.replace(/\r/g,'');
+  if(v.length>target.length)v=v.slice(0,target.length);
+  if(v!==box.value)box.value=v;
+  if(v.length>(box._last||0)){keys++;if(v[v.length-1]!==target[v.length-1])wrong++}
+  box._last=v.length;paint();stats();
+  if(v.length===target.length)finish();
+});
+function finish(){
+  done=true;clearInterval(timer);box.disabled=true;
+  const s=stats(),left=[...box.value].filter((c,i)=>c!==target[i]).length;
+  const words=target.trim().split(/\s+/).length;
+  resTxt.innerHTML=`Speed: <b>${s.wpm} words per minute</b> (${words} words in ${s.t.toFixed(1)}s)<br>Accuracy: <b>${s.acc}%</b> (${wrong} mistakes made, ${left} left uncorrected)<br>${s.acc>=97?'Very clean.':s.acc>=90?'Good. Slow down on the red spots.':'Focus on accuracy first, speed follows.'}`;
+  document.getElementById('res').classList.add('show');
+  API.submit('typing-test',s.wpm,s.acc,pick.value).then(()=>API.board('typing-test',document.getElementById('board')));
+}
+poem.addEventListener('click',()=>box.focus());
+document.getElementById('restart').onclick=init;document.getElementById('again').onclick=init;pick.onchange=init;
+playerName.value=API.name();
+fetch('/api/poems').then(r=>r.json()).then(p=>{if(!Object.keys(p).length)return;for(const k in POEMS)delete POEMS[k];Object.assign(POEMS,p);pick.innerHTML='';Object.keys(POEMS).forEach(k=>pick.add(new Option(k,k)));init()}).catch(()=>{});
+init();
+</script>
+</body>
+</html>
